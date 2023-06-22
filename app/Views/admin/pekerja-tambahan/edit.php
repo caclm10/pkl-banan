@@ -16,6 +16,15 @@
 
         <?= view('components/file-input', ['name' => 'gambar', 'isImage' => true, 'value' => $worker['path_gambar']]) ?>
 
+        <?php if ($worker['path_gambar']) : ?>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="" id="hapusGambar" name="hapus_gambar">
+                <label class="form-check-label" for="hapusGambar">
+                    Hapus Gambar?
+                </label>
+            </div>
+        <?php endif ?>
+
         <?= view('components/form-submit') ?>
     </form>
 </div>

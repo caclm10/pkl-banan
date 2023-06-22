@@ -31,6 +31,11 @@ class Notif
                 $this->message = "Data {$instance} berhasil dihapus.";
                 $this->type = self::SUCCESS;
                 break;
+
+            case 'has-project':
+                $this->message =  ucfirst($instance) . " ini bekerja di satu atau lebih proyek.";
+                $this->type = self::ERROR;
+                break;
         }
     }
 }

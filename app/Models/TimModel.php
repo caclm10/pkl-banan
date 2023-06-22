@@ -101,4 +101,17 @@ class TimModel extends Model
             ]
         ];
     }
+
+    public function isPekerjaProyek($id)
+    {
+        $builder = $this->db->table('tim');
+
+        $builder->select('id')
+            ->where('id', $id)
+            ->where("EXISTS (SELECT id FROM pekerja_proyek WHERE id_tim = $id)");
+
+        $query = $builder->get();
+
+        return $query->getNumRows() > 0;
+    }
 }

@@ -14,9 +14,12 @@ class AdminController extends BaseController
     protected $routePrefix;
     protected $data;
 
+    protected $modelData;
+
     protected function redirectIfEmpty($id, $ajax = false)
     {
-        if (!$this->model->find($id)) {
+        $this->modelData = $this->model->find($id);
+        if (!$this->modelData) {
             if ($ajax) {
                 $this->response->setStatusCode(404);
             } else {
@@ -126,7 +129,7 @@ class AdminController extends BaseController
 
     protected function deleteModel($id, $imageColumn = null, $notif = true)
     {
-        $data = $this->model->find($id);
+        $data = $this->modelData;
 
         if ($data) {
             if ($imageColumn && $data[$imageColumn]) {

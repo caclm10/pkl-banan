@@ -71,7 +71,7 @@ class ProyekModel extends Model
         ];
     }
 
-    public function getProyekWithFirstGambar()
+    public function getProyekWithFirstGambar($limit = null)
     {
         $query = $this->select('proyek.*, gambar_proyek.path_gambar')
             ->join('gambar_proyek', 'gambar_proyek.id_proyek = proyek.id', 'left')
@@ -79,22 +79,36 @@ class ProyekModel extends Model
             ->whereIn('gambar_proyek.urutan', function ($subquery) {
                 $subquery->selectMin('urutan')->from('gambar_proyek')->where('gambar_proyek.id_proyek = proyek.id');
             })
-            ->orWhere('gambar_proyek.id_proyek IS NULL')
-            ->get();
+            ->orWhere('gambar_proyek.id_proyek IS NULL');
 
-        return $query->getResultArray();
+        if ($limit) {
+            $query = $query->limit($limit);
+        }
+
+        return $query->get()->getResultArray();
     }
 
     public function getProyekWithGambarAndPekerja($id)
     {
         $query = $this->select('proyek.*,
-        GROUP_CONCAT(DISTINCT CONCAT(gambar_proyek.path_gambar) ORDER BY gambar_proyek.urutan ASC SEPARATOR ", ") AS path_gambar, 
-        GROUP_CONCAT(DISTINCT CONCAT(tim.nama, "::", tim.jabatan, "::", tim.path_gambar) SEPARATOR ", ") AS tim_info,
-        GROUP_CONCAT(DISTINCT CONCAT(pekerja_tambahan.nama, "::", pekerja_tambahan.jabatan, "::", pekerja_tambahan.path_gambar) SEPARATOR ", ") AS pekerja_tambahan_info')
-            ->join('gambar_proyek', 'gambar_proyek.id_proyek = proyek.id', 'left')
+        (
+            SELECT GROUP_CONCAT(DISTINCT CONCAT(gambar_proyek.path_gambar) ORDER BY gambar_proyek.urutan ASC SEPARATOR ", ")
+            FROM gambar_proyek
+            WHERE gambar_proyek.id_proyek = proyek.id
+        ) AS path_gambar,
+        (
+            SELECT GROUP_CONCAT(DISTINCT CONCAT(tim.nama, "::", tim.jabatan, "::", tim.path_gambar) SEPARATOR ", ")
+            FROM tim
+            JOIN pekerja_proyek ON pekerja_proyek.id_tim = tim.id
+            WHERE pekerja_proyek.id_proyek = proyek.id
+        ) AS tim_info,
+        (
+            SELECT GROUP_CONCAT(DISTINCT CONCAT(pekerja_tambahan.nama, "::", pekerja_tambahan.jabatan, "::", pekerja_tambahan.path_gambar) SEPARATOR ", ")
+            FROM pekerja_tambahan
+            JOIN pekerja_proyek ON pekerja_proyek.id_pekerja_tambahan = pekerja_tambahan.id
+            WHERE pekerja_proyek.id_proyek = proyek.id
+        ) AS pekerja_tambahan_info')
             ->join('pekerja_proyek', 'pekerja_proyek.id_proyek = proyek.id', 'left')
-            ->join('tim', 'tim.id = pekerja_proyek.id_tim', 'left')
-            ->join('pekerja_tambahan', 'pekerja_tambahan.id = pekerja_proyek.id_pekerja_tambahan', 'left')
             ->where('proyek.id', $id)
             ->groupBy('proyek.id')
             ->get();

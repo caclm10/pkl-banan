@@ -152,33 +152,17 @@
         </div>
 
         <div class="row row-cols-md-3 g-4 pt-5 project-list">
-            <div class="col">
-                <div class="card project-list-item" data-bs-toggle="modal">
-                    <img src="https://placehold.co/366x140" class="card-img-top" alt="project-item">
-                    <div class="card-body">
-                        <h5 class="card-title">Mall Doro</h5>
-                        <p class="card-text project-description">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Consequatur praesentium rerum cumque ducimus nesciunt dolore numquam, saepe tenetur labore nam est molestiae dolor non? Aliquam provident illo deleniti non error?</p>
+            <?php foreach ($projects as $project) : ?>
+                <div class="col">
+                    <div class="card project-list-item">
+                        <img src="/<?= $project['path_gambar'] ?: 'images/366x140.png' ?>" class="card-img-top" alt="project-item">
+                        <div class="card-body">
+                            <h5 class="card-title"><?= $project['nama'] ?></h5>
+                            <p class="card-text project-description"><?= $project['deskripsi'] ?></p>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col">
-                <div class="card project-list-item" data-bs-toggle="modal">
-                    <img src="https://placehold.co/366x140" class="card-img-top" alt="project-item">
-                    <div class="card-body">
-                        <h5 class="card-title">Apartemen Altin</h5>
-                        <p class="card-text project-description">This is a longer card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col">
-                <div class="card project-list-item" data-bs-toggle="modal">
-                    <img src="https://placehold.co/366x140" class="card-img-top" alt="project-item">
-                    <div class="card-body">
-                        <h5 class="card-title">Mall Super Jaya x Nonai</h5>
-                        <p class="card-text project-description">This is a longer card with supporting text below as a natural lead-in to additional content.</p>
-                    </div>
-                </div>
-            </div>
+            <?php endforeach ?>
         </div>
 
         <div class="d-flex justify-content-end mt-5">

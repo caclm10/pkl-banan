@@ -65,7 +65,7 @@
             <div class="col" data-additional-workers="">
                 <div class="team-list-item">
                     <div class="team-picture">
-                        <img src="/<?= $worker["path_gambar"] ?>" alt="picture" class="">
+                        <img src="/<?= $worker["path_gambar"] ?: 'images/person-placeholder.jpg' ?>" alt="picture" class="">
                         <button type="button" class="btn text-danger btn-link btn-delete" data-delete-worker-id="<?= $worker['id'] ?>">
                             <span class="iconify" data-icon="mdi:delete"></span>
                         </button>

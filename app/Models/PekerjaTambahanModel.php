@@ -96,6 +96,19 @@ class PekerjaTambahanModel extends Model
         ];
     }
 
+    public function isPekerjaProyek($id)
+    {
+        $builder = $this->db->table('pekerja_tambahan');
+
+        $builder->select('id')
+            ->where('id', $id)
+            ->where("EXISTS (SELECT id FROM pekerja_proyek WHERE id_pekerja_tambahan = $id)");
+
+        $query = $builder->get();
+
+        return $query->getNumRows() > 0;
+    }
+
     protected function setJabatan(array $data)
     {
         if (empty($data['data']['jabatan'])) {

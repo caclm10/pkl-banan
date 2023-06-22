@@ -71,7 +71,11 @@ class Tim extends AdminController
     {
         $this->redirectIfEmpty($id);
 
-        $this->deleteModel($id, 'path_gambar');
+        if ($this->model->isPekerjaProyek($id)) {
+            $this->notif('has-project');
+        } else {
+            $this->deleteModel($id, 'path_gambar');
+        }
 
         return redirect()->back();
     }

@@ -53,14 +53,27 @@ class PekerjaTambahan extends AdminController
     {
         $this->redirectIfEmpty($id);
 
-        $image = $this->request->getFile('gambar');
+        $isDeleteImage = $this->request->getPost('hapus_gambar') === "";
+
+        $image = null;
+
+        if (!$isDeleteImage) {
+            $image = $this->request->getFile('gambar');
+        }
         $worker = $this->model->find($id);
 
         $this->checkValidation($this->model->getRules($image, $worker['path_gambar']), $this->model->getErrorMessages());
 
         $this->populateData();
 
-        $this->updateImage($image, 'path_gambar', 'images', $worker['path_gambar']);
+        if ($isDeleteImage) {
+            if ($worker['path_gambar']) {
+                deletePublicFile($worker['path_gambar']);
+                $this->pushData("path_gambar", NULL);
+            }
+        } else {
+            $this->updateImage($image, 'path_gambar', 'images', $worker['path_gambar']);
+        }
 
         $this->updateModel($id);
 
@@ -71,7 +84,12 @@ class PekerjaTambahan extends AdminController
     {
         $this->redirectIfEmpty($id);
 
-        $this->deleteModel($id, 'path_gambar');
+        if ($this->model->isPekerjaProyek($id)) {
+            $this->notif('has-project');
+        } else {
+            $this->deleteModel($id, 'path_gambar');
+        }
+
 
         return redirect()->back();
     }

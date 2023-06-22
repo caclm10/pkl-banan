@@ -330,6 +330,8 @@ button {
     border-radius: 999px;
     object-fit: cover;
     max-width: 164px;
+    width: 100%;
+    aspect-ratio: 1;
 }
 
 .team-list .team-list-item .team-picture .btn-delete {
