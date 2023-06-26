@@ -10,7 +10,7 @@ class Proyek extends BaseController
 
     public function index($proyekId = null)
     {
-        // dd((new \App\Models\ProyekModel())->getProyekWithGambarAndPekerja($proyekId));
+        dd((new \App\Models\ProyekModel())->getProyekWithGambarAndPekerja($proyekId));
         if ($proyekId != null) {
             if ($this->request->isAJAX()) {
                 return $this->response->setJSON((new \App\Models\ProyekModel())->getProyekWithGambarAndPekerja($proyekId));

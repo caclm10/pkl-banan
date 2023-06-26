@@ -90,31 +90,20 @@ class ProyekModel extends Model
 
     public function getProyekWithGambarAndPekerja($id)
     {
-        $query = $this->select('proyek.*,
-        (
-            SELECT GROUP_CONCAT(DISTINCT CONCAT(gambar_proyek.path_gambar) ORDER BY gambar_proyek.urutan ASC SEPARATOR ", ")
-            FROM gambar_proyek
-            WHERE gambar_proyek.id_proyek = proyek.id
-        ) AS path_gambar,
-        (
-            SELECT GROUP_CONCAT(DISTINCT CONCAT(tim.nama, "::", tim.jabatan, "::", tim.path_gambar) SEPARATOR ", ")
-            FROM tim
-            JOIN pekerja_proyek ON pekerja_proyek.id_tim = tim.id
-            WHERE pekerja_proyek.id_proyek = proyek.id
-        ) AS tim_info,
-        (
-            SELECT GROUP_CONCAT(DISTINCT CONCAT(pekerja_tambahan.nama, "::", pekerja_tambahan.jabatan, "::", pekerja_tambahan.path_gambar) SEPARATOR ", ")
-            FROM pekerja_tambahan
-            JOIN pekerja_proyek ON pekerja_proyek.id_pekerja_tambahan = pekerja_tambahan.id
-            WHERE pekerja_proyek.id_proyek = proyek.id
-        ) AS pekerja_tambahan_info')
+        $query = $this->select('proyek.*, GROUP_CONCAT(DISTINCT CONCAT(gambar_proyek.path_gambar) ORDER BY gambar_proyek.urutan ASC SEPARATOR ", ") AS path_gambar, 
+        GROUP_CONCAT(DISTINCT CONCAT(tim.nama, "::", tim.jabatan, "::", tim.path_gambar) SEPARATOR ", ") AS tim_info,
+        GROUP_CONCAT(DISTINCT CONCAT(pekerja_tambahan.nama, "::", pekerja_tambahan.jabatan, "::", IFNULL(pekerja_tambahan.path_gambar, "")) SEPARATOR ", ") AS pekerja_tambahan_info')
+            ->join('gambar_proyek', 'gambar_proyek.id_proyek = proyek.id', 'left')
             ->join('pekerja_proyek', 'pekerja_proyek.id_proyek = proyek.id', 'left')
+            ->join('tim', 'tim.id = pekerja_proyek.id_tim', 'left')
+            ->join('pekerja_tambahan', 'pekerja_tambahan.id = pekerja_proyek.id_pekerja_tambahan', 'left')
             ->where('proyek.id', $id)
             ->groupBy('proyek.id')
             ->get();
 
         $result = $query->getRowArray();
 
+        dd($result);
 
         if ($result) {
             $gambarProyekArray = explode(", ", $result['path_gambar']);

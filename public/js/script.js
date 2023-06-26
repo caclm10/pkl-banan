@@ -494,28 +494,32 @@ if (addWorkerModal) {
 
         })
     }
+
+    function populateOptions(remainingData, workersSelect) {
+        workersSelect.innerHTML = ''
+
+        remainingData.forEach(item => {
+            const option = document.createElement('option')
+            option.value = item.id
+            option.textContent = item.nama + ' - ' + item.jabatan
+            workersSelect.appendChild(option)
+        });
+    }
+
+    const addWorkerForm = document.querySelector(`#addWorkerForm`)
     const deleteButtons = document.querySelectorAll(`.btn-delete`)
+
+    let loading
+    let remainingTeams, remainingAdditionalWorkers
 
     for (const button of deleteButtons) {
         addDeleteListener(button)
     }
 
     addWorkerModal.addEventListener('show.bs.modal', event => {
-        function populateOptions(remainingData, workersSelect) {
-            workersSelect.innerHTML = ''
-
-            remainingData.forEach(item => {
-                const option = document.createElement('option')
-                option.value = item.id
-                option.textContent = item.nama + ' - ' + item.jabatan
-                workersSelect.appendChild(option)
-            });
-        }
-
         const button = event.relatedTarget
         const projectId = button.getAttribute('data-project-id')
 
-        const addWorkerForm = document.querySelector(`#addWorkerForm`)
         const addWorkerFormInner = addWorkerForm.innerHTML
 
         addWorkerForm.innerHTML = `
@@ -526,6 +530,8 @@ if (addWorkerModal) {
             </div>
         `
 
+
+        loading = true
         fetch(`/admin/proyek/${projectId}/pekerja`, {
             headers: {
                 'Content-Type': 'application/json',
@@ -539,8 +545,8 @@ if (addWorkerModal) {
                 const typeSelect = document.querySelector('#tipe')
                 const workersSelect = document.querySelector('#pekerja')
 
-                let remainingTeams = data.remainingTeams
-                let remainingAdditionalWorkers = data.remainingAdditionalWorkers
+                remainingTeams = data.remainingTeams
+                remainingAdditionalWorkers = data.remainingAdditionalWorkers
 
                 // Menambahkan opsi saat fetch pertama kali selesai
                 populateOptions(remainingTeams, workersSelect);
@@ -555,95 +561,102 @@ if (addWorkerModal) {
                         populateOptions(remainingAdditionalWorkers, workersSelect)
                     }
                 })
-
-
-                addWorkerForm.addEventListener('submit', event => {
-                    event.preventDefault()
-
-                    const submitButton = event.submitter
-                    const submitButtonInner = submitButton.innerHTML
-
-                    submitButton.disabled = true
-                    submitButton.innerHTML = `
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        Loading...
-                    `
-
-                    fetch(addWorkerForm.action, {
-                        method: "POST",
-                        body: JSON.stringify({
-                            tipe: typeSelect.value,
-                            pekerja: workersSelect.value
-                        }),
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            submitButton.disabled = false
-                            submitButton.innerHTML = submitButtonInner
-
-                            const workersElements = document.querySelectorAll(`[data-${typeSelect.value === 'tim' ? 'team' : 'additional'}-workers]`)
-
-                            let lastWorkerElement
-                            if (workersElements.length > 0) {
-                                lastWorkerElement = workersElements[workersElements.length - 1]
-                            }
-
-                            const newWorkerElement = document.createElement(`div`)
-                            newWorkerElement.setAttribute(`data-${typeSelect.value === 'tim' ? 'team' : 'additional'}-workers`, "")
-                            newWorkerElement.classList.add('col')
-
-                            newWorkerElement.innerHTML = `
-                                <div class= "team-list-item">
-                                    <div class="team-picture">
-                                        <img src="/${data.path_gambar || 'images/person-placeholder.jpg'}" alt="picture" class="">
-                                        <button type="button" class="btn text-danger btn-link btn-delete" data-delete-worker-id="${data.id_pekerja_proyek}">
-                                            <span class="iconify" data-icon="mdi:delete"></span>
-                                        </button>
-                                    </div>
-                                    <div class="team-header">
-                                        <h4 class="mb-0 text-primary">${data.nama}</h4>
-                                        <h5 class="fs-6 mt-0">${data.jabatan}</h5>
-                                    </div>
-                                </div>
-                            `
-
-                            const deleteButton = newWorkerElement.querySelector(`[data-delete-worker-id]`)
-
-                            addDeleteListener(deleteButton)
-
-                            if (lastWorkerElement) {
-                                lastWorkerElement.insertAdjacentElement('afterend', newWorkerElement)
-                            } else {
-                                if (typeSelect.value === 'tim') {
-                                    teamList.prepend(newWorkerElement)
-                                } else {
-                                    teamList.appendChild(newWorkerElement)
-                                }
-                            }
-
-                            if (typeSelect.value === 'tim') {
-                                remainingTeams = remainingTeams.filter(worker => worker.id !== data.id)
-                                populateOptions(remainingTeams, workersSelect)
-                            } else {
-                                remainingAdditionalWorkers = remainingAdditionalWorkers.filter(worker => worker.id !== data.id)
-                                populateOptions(remainingAdditionalWorkers, workersSelect)
-                            }
-
-                            swal.fire(
-                                'Berhasil!',
-                                'Pekerja berhasil ditambah.',
-                                'success'
-                            )
-                        })
-                })
             })
             .catch(error => {
                 // Tangani kesalahan jika terjadi
                 console.error('Terjadi kesalahan:', error)
-            });
+            })
+            .finally(() => {
+                loading = false
+            })
+
+    })
+    addWorkerForm.addEventListener('submit', event => {
+        event.preventDefault()
+
+        if (loading) return
+
+        const typeSelect = document.querySelector('#tipe')
+        const workersSelect = document.querySelector('#pekerja')
+
+        const submitButton = event.submitter
+        const submitButtonInner = submitButton.innerHTML
+
+        submitButton.disabled = true
+        submitButton.innerHTML = `
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Loading...
+                `
+
+        fetch(addWorkerForm.action, {
+            method: "POST",
+            body: JSON.stringify({
+                tipe: typeSelect.value,
+                pekerja: workersSelect.value
+            }),
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                submitButton.disabled = false
+                submitButton.innerHTML = submitButtonInner
+
+                const workersElements = document.querySelectorAll(`[data-${typeSelect.value === 'tim' ? 'team' : 'additional'}-workers]`)
+
+                let lastWorkerElement
+                if (workersElements.length > 0) {
+                    lastWorkerElement = workersElements[workersElements.length - 1]
+                }
+
+                const newWorkerElement = document.createElement(`div`)
+                newWorkerElement.setAttribute(`data-${typeSelect.value === 'tim' ? 'team' : 'additional'}-workers`, "")
+                newWorkerElement.classList.add('col')
+
+                newWorkerElement.innerHTML = `
+                            <div class= "team-list-item">
+                                <div class="team-picture">
+                                    <img src="/${data.path_gambar || 'images/person-placeholder.jpg'}" alt="picture" class="">
+                                    <button type="button" class="btn text-danger btn-link btn-delete" data-delete-worker-id="${data.id_pekerja_proyek}">
+                                        <span class="iconify" data-icon="mdi:delete"></span>
+                                    </button>
+                                </div>
+                                <div class="team-header">
+                                    <h4 class="mb-0 text-primary">${data.nama}</h4>
+                                    <h5 class="fs-6 mt-0">${data.jabatan}</h5>
+                                </div>
+                            </div>
+                        `
+
+                const deleteButton = newWorkerElement.querySelector(`[data-delete-worker-id]`)
+
+                addDeleteListener(deleteButton)
+
+                if (lastWorkerElement) {
+                    lastWorkerElement.insertAdjacentElement('afterend', newWorkerElement)
+                } else {
+                    if (typeSelect.value === 'tim') {
+                        teamList.prepend(newWorkerElement)
+                    } else {
+                        teamList.appendChild(newWorkerElement)
+                    }
+                }
+
+                if (typeSelect.value === 'tim') {
+                    remainingTeams = remainingTeams.filter(worker => worker.id !== data.id)
+                    populateOptions(remainingTeams, workersSelect)
+                } else {
+                    remainingAdditionalWorkers = remainingAdditionalWorkers.filter(worker => worker.id !== data.id)
+                    populateOptions(remainingAdditionalWorkers, workersSelect)
+                }
+
+                swal.fire(
+                    'Berhasil!',
+                    'Pekerja berhasil ditambah.',
+                    'success'
+                )
+            })
     })
 }
